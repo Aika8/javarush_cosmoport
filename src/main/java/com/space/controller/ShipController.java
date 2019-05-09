@@ -86,6 +86,6 @@ public class ShipController {
     }
 
     private double round(double value) {
-        return Math.round(value* 100) / 100D;
+        return Math.round(value * 100) / 100D;
     }
 }
