@@ -4,10 +4,9 @@ import com.space.model.Ship;
 import com.space.model.ShipType;
 import com.space.service.ShipService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -45,24 +44,9 @@ public class ShipController {
         final List<Ship> ships = shipService.getShips(name, planet, shipType, after, before, isUsed, minSpeed, maxSpeed,
             minCrewSize, maxCrewSize, minRating, maxRating);
 
-        if (order != null) {
-            ships.sort((ship1, ship2) -> {
-                switch (order) {
-                    case ID: return ship1.getId().compareTo(ship2.getId());
-                    case SPEED: return ship1.getSpeed().compareTo(ship2.getSpeed());
-                    case DATE: return ship1.getProdDate().compareTo(ship2.getProdDate());
-                    case RATING: return ship1.getRating().compareTo(ship2.getRating());
-                    default: return 0;
-                }
-            });
-        }
+        final List<Ship> sortedShips = shipService.sortShips(ships, order);
 
-        final Integer page = pageNumber == null ? 0 : pageNumber;
-        final Integer size = pageSize == null ? 3 : pageSize;
-        final int from = page * size;
-        int to = from + size;
-        if (to > ships.size()) to = ships.size();
-        return ships.subList(from, to);
+        return shipService.getPage(sortedShips, pageNumber, pageSize);
     }
 
     @RequestMapping(path = "/rest/ships/count", method = RequestMethod.GET)
@@ -82,5 +66,26 @@ public class ShipController {
     ) {
         return shipService.getShips(name, planet, shipType, after, before, isUsed, minSpeed, maxSpeed,
             minCrewSize, maxCrewSize, minRating, maxRating).size();
+    }
+
+    @RequestMapping(path = "/rest/ships", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<Ship> createShip(@RequestBody Ship ship) {
+        if (!shipService.isValidShip(ship)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        if (ship.getUsed() == null) ship.setUsed(false);
+        ship.setSpeed(round(ship.getSpeed()));
+        final double rating = shipService.computeRating(ship.getSpeed(), ship.getUsed(), ship.getProdDate());
+        ship.setRating(round(rating));
+
+        final Ship savedShip = shipService.saveShip(ship);
+
+        return new ResponseEntity<>(savedShip, HttpStatus.OK);
+    }
+
+    private double round(double value) {
+        return Math.round(value* 100) / 100D;
     }
 }

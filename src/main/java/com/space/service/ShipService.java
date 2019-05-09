@@ -1,11 +1,15 @@
 package com.space.service;
 
+import com.space.controller.ShipOrder;
 import com.space.model.Ship;
 import com.space.model.ShipType;
 
+import java.util.Date;
 import java.util.List;
 
 public interface ShipService {
+
+    Ship saveShip(Ship ship);
 
     List<Ship> getShips(
         String name,
@@ -21,4 +25,12 @@ public interface ShipService {
         Double minRating,
         Double maxRating
     );
+
+    List<Ship> sortShips(List<Ship> ships, ShipOrder order);
+
+    List<Ship> getPage(List<Ship> ships, Integer pageNumber, Integer pageSize);
+
+    boolean isValidShip(Ship ship);
+
+    double computeRating(double speed, boolean isUsed, Date prod);
 }
