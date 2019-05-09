@@ -2,14 +2,13 @@ package com.space.controller;
 
 import com.space.service.ShipService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Controller
+@RestController
 public class ShipController {
 
     private ShipService shipService;
@@ -22,11 +21,8 @@ public class ShipController {
         this.shipService = shipService;
     }
 
-    @RequestMapping(value = "/ships", method = RequestMethod.GET)
-    public ModelAndView displayAllUser() {
-        ModelAndView mv = new ModelAndView();
-        List userList = shipService.getAllShips();
-        mv.addObject("ships", userList);
-        return mv;
+    @RequestMapping(value = "/rest/ships", method = RequestMethod.GET)
+    public List getAllShips() {
+        return shipService.getAllShips();
     }
 }
