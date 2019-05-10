@@ -37,6 +37,11 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
+    public Ship getShip(Long id) {
+        return shipRepository.findById(id).orElse(null);
+    }
+
+    @Override
     public List<Ship> getShips(
         String name,
         String planet,

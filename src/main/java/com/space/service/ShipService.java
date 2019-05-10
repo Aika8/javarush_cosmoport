@@ -11,6 +11,8 @@ public interface ShipService {
 
     Ship saveShip(Ship ship);
 
+    Ship getShip(Long id);
+
     List<Ship> getShips(
         String name,
         String planet,
