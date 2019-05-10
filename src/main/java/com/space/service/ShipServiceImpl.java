@@ -42,6 +42,11 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
+    public void deleteShip(Ship ship) {
+        shipRepository.delete(ship);
+    }
+
+    @Override
     public List<Ship> getShips(
         String name,
         String planet,

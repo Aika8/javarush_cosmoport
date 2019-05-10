@@ -119,6 +119,17 @@ public class ShipController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @RequestMapping(path = "/rest/ships/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<Ship> deleteShip(@PathVariable(value = "id") String pathId) {
+        final ResponseEntity<Ship> entity = getShip(pathId);
+        final Ship savedShip = entity.getBody();
+        if (savedShip == null) {
+            return entity;
+        }
+        shipService.deleteShip(savedShip);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     private Long convertIdToLong(String pathId) {
         if (pathId == null) {
             return null;

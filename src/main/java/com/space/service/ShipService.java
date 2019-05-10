@@ -15,6 +15,8 @@ public interface ShipService {
 
     Ship updateShip(Ship oldShip, Ship newShip) throws IllegalArgumentException;
 
+    void deleteShip(Ship ship);
+
     List<Ship> getShips(
         String name,
         String planet,
