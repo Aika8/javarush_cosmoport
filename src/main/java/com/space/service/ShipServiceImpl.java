@@ -105,21 +105,104 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
-    public boolean isValidShip(Ship ship) {
+    public boolean isShipValid(Ship ship) {
+        return ship != null && isStringValid(ship.getName()) && isStringValid(ship.getPlanet())
+            && isProdDateValid(ship.getProdDate())
+            && isSpeedValid(ship.getSpeed())
+            && isCrewSizeValid(ship.getCrewSize());
+    }
+
+    @Override
+    public double computeRating(double speed, boolean isUsed, Date prod) {
+        final int now = 3019;
+        final int prodYear = getYearFromDate(prod);
+        final double k = isUsed ? 0.5 : 1;
+        final double rating = 80 * speed * k / (now - prodYear + 1);
+        return round(rating);
+    }
+
+    @Override
+    public Ship updateShip(Ship oldShip, Ship newShip) throws IllegalArgumentException {
+        boolean shouldChangeRating = false;
+
+        final String name = newShip.getName();
+        if (name != null) {
+            if (isStringValid(name)) {
+                oldShip.setName(name);
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+        final String planet = newShip.getPlanet();
+        if (planet != null) {
+            if (isStringValid(planet)) {
+                oldShip.setPlanet(planet);
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+        if (newShip.getShipType() != null) {
+            oldShip.setShipType(newShip.getShipType());
+        }
+        final Date prodDate = newShip.getProdDate();
+        if (prodDate != null) {
+            if (isProdDateValid(prodDate)) {
+                oldShip.setProdDate(prodDate);
+                shouldChangeRating = true;
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+        if (newShip.getUsed() != null) {
+            oldShip.setUsed(newShip.getUsed());
+            shouldChangeRating = true;
+        }
+        final Double speed = newShip.getSpeed();
+        if (speed != null) {
+            if (isSpeedValid(speed)) {
+                oldShip.setSpeed(speed);
+                shouldChangeRating = true;
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+        final Integer crewSize = newShip.getCrewSize();
+        if (crewSize != null) {
+            if (isCrewSizeValid(crewSize)) {
+                oldShip.setCrewSize(crewSize);
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
+        if (shouldChangeRating) {
+            final double rating = computeRating(oldShip.getSpeed(), oldShip.getUsed(), oldShip.getProdDate());
+            oldShip.setRating(rating);
+        }
+        shipRepository.save(oldShip);
+        return oldShip;
+    }
+
+    private boolean isCrewSizeValid(Integer crewSize) {
+        final int minCrewSize = 1;
+        final int maxCrewSize = 9999;
+        return crewSize != null && crewSize.compareTo(minCrewSize) >= 0 && crewSize.compareTo(maxCrewSize) <= 0;
+    }
+
+    private boolean isSpeedValid(Double speed) {
+        final double minSpeed = 0.01;
+        final double maxSpeed = 0.99;
+        return speed != null && speed.compareTo(minSpeed) >= 0 && speed.compareTo(maxSpeed) <= 0;
+    }
+
+    private boolean isStringValid(String value) {
+        final int maxStringLength = 50;
+        return value != null && !value.isEmpty() && value.length() <= maxStringLength;
+    }
+
+    private boolean isProdDateValid(Date prodDate) {
         final Date startProd = getDateForYear(2800);
         final Date endProd = getDateForYear(3019);
-        final int maxStringLength = 50;
-        final Double minSpeed = 0.01;
-        final Double maxSpeed = 0.99;
-        final Integer minCrewSize = 1;
-        final Integer maxCrewSize = 9999;
-        return ship != null && ship.getName() != null
-            && !ship.getName().isEmpty() && ship.getName().length() <= maxStringLength
-            && ship.getPlanet() != null && !ship.getPlanet().isEmpty() && ship.getPlanet().length() <= maxStringLength
-            && ship.getProdDate() != null && ship.getProdDate().after(startProd) && ship.getProdDate().before(endProd)
-            && ship.getSpeed() != null && ship.getSpeed().compareTo(minSpeed) >= 0 && ship.getSpeed().compareTo(maxSpeed) <= 0
-            && ship.getCrewSize() != null && ship.getCrewSize().compareTo(minCrewSize) >= 0
-            && ship.getCrewSize().compareTo(maxCrewSize) <= 0;
+        return prodDate != null && prodDate.after(startProd) && prodDate.before(endProd);
     }
 
     private Date getDateForYear(int year) {
@@ -134,11 +217,7 @@ public class ShipServiceImpl implements ShipService {
         return calendar.get(Calendar.YEAR);
     }
 
-    @Override
-    public double computeRating(double speed, boolean isUsed, Date prod) {
-        final int now = 3019;
-        final int prodYear = getYearFromDate(prod);
-        final double k = isUsed ? 0.5 : 1;
-        return 80 * speed * k / (now - prodYear + 1);
+    private double round(double value) {
+        return Math.round(value * 100) / 100D;
     }
 }

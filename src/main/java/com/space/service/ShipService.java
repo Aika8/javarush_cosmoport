@@ -13,6 +13,8 @@ public interface ShipService {
 
     Ship getShip(Long id);
 
+    Ship updateShip(Ship oldShip, Ship newShip) throws IllegalArgumentException;
+
     List<Ship> getShips(
         String name,
         String planet,
@@ -32,7 +34,7 @@ public interface ShipService {
 
     List<Ship> getPage(List<Ship> ships, Integer pageNumber, Integer pageSize);
 
-    boolean isValidShip(Ship ship);
+    boolean isShipValid(Ship ship);
 
     double computeRating(double speed, boolean isUsed, Date prod);
 }

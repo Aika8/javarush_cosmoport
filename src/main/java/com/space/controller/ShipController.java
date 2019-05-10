@@ -71,14 +71,14 @@ public class ShipController {
     @RequestMapping(path = "/rest/ships", method = RequestMethod.POST)
     @ResponseBody
     public ResponseEntity<Ship> createShip(@RequestBody Ship ship) {
-        if (!shipService.isValidShip(ship)) {
+        if (!shipService.isShipValid(ship)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         if (ship.getUsed() == null) ship.setUsed(false);
-        ship.setSpeed(round(ship.getSpeed()));
+        ship.setSpeed(ship.getSpeed());
         final double rating = shipService.computeRating(ship.getSpeed(), ship.getUsed(), ship.getProdDate());
-        ship.setRating(round(rating));
+        ship.setRating(rating);
 
         final Ship savedShip = shipService.saveShip(ship);
 
@@ -87,14 +87,7 @@ public class ShipController {
 
     @RequestMapping(path = "/rest/ships/{id}", method = RequestMethod.GET)
     public ResponseEntity<Ship> getShip(@PathVariable(value = "id") String pathId) {
-        Long id;
-        if (pathId == null) {
-            id = null;
-        } else try {
-            id = Long.parseLong(pathId);
-        } catch (NumberFormatException e) {
-            id = null;
-        }
+        final Long id = convertIdToLong(pathId);
         if (id == null || id <= 0) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -105,7 +98,34 @@ public class ShipController {
         return new ResponseEntity<>(ship, HttpStatus.OK);
     }
 
-    private double round(double value) {
-        return Math.round(value * 100) / 100D;
+    @RequestMapping(path = "/rest/ships/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<Ship> updateShip(
+        @PathVariable(value = "id") String pathId,
+        @RequestBody Ship ship
+    ) {
+        final ResponseEntity<Ship> entity = getShip(pathId);
+        final Ship savedShip = entity.getBody();
+        if (savedShip == null) {
+            return entity;
+        }
+
+        final Ship result;
+        try {
+            result = shipService.updateShip(savedShip, ship);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    private Long convertIdToLong(String pathId) {
+        if (pathId == null) {
+            return null;
+        } else try {
+            return Long.parseLong(pathId);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
